@@ -13,6 +13,10 @@ const start = require('./commands/start');
 const envPath = global.ENV_PATH ? global.ENV_PATH : '.env';
 require('dotenv').config({path: envPath});
 
+const optionsList = [
+  'port', 'ssl', 'resourcesDirectory', 'DATABASE_URL', 'silent', 'verbose'
+]
+
 // Load up our configuration, passing the defaults in.
 let options = rc('pls', {
   resourcesDirectory: './resources',
@@ -42,7 +46,7 @@ program
   .description('Build and run resource migrations')
   .action(() => {
     options = _.defaults(transformProgramOptions(program), options);
-    migrate(options);
+    migrate(_.pick(options, optionsList));
   });
 
 program
@@ -50,7 +54,7 @@ program
   .description('Remove all data from the database')
   .action(() => {
     options = _.defaults(transformProgramOptions(program), options);
-    resetDatabase(options);
+    resetDatabase(_.pick(options, optionsList));
   });
 
 program
@@ -58,7 +62,7 @@ program
   .description('Start the API')
   .action(() => {
     options = _.defaults(transformProgramOptions(program), options);
-    start(options);
+    start(_.pick(options, optionsList));
   });
 
 function parseBoolean(val) {

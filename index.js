@@ -3,9 +3,16 @@
 const app = require('./server/app');
 const log = require('./server/util/log');
 
-module.exports = function(options) {
-  app(options);
-};
+const options = process.argv[2];
+
+let parsedOptions;
+try {
+  parsedOptions = JSON.parse(options);
+} catch (e) {
+  parsedOptions = {};
+}
+
+app(parsedOptions);
 
 process.on('uncaughtException', (err) => {
   log.fatal({err}, 'Uncaught exception');
