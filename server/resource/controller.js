@@ -43,6 +43,24 @@ function Controller(resource, db) {
   _.bindAll(this, ['create', 'read', 'update', 'delete', 'formatTransaction']);
 }
 
+function buildResponseRelationships(result, resource) {
+  const response = {};
+  const relationValues = _.forEach(resource.relations, (relation, columnBase) => {
+    const columnName = `${columnBase}_id`;
+    const id = result[columnName];
+
+    if (id) {
+      response[columnBase] = {
+        // TODO: this needs to be plural
+        type: relation.resource,
+        id
+      };
+    }
+  });
+
+  return response;
+}
+
 Object.assign(Controller.prototype, {
   // This transforms the data from the format that it is in the
   // database to the one we need for our endpoint.
@@ -51,24 +69,37 @@ Object.assign(Controller.prototype, {
   formatTransaction(t) {
     const attrs = ([]).concat(Object.keys(this.resource.attributes));
     const meta = ([]).concat(Object.keys(this.resource.meta));
+    const relationships = buildResponseRelationships(t, this.resource);
 
     return {
       id: t.id,
       type: this.resource.plural_form,
       attributes: _.pick(t, attrs),
-      meta: _.pick(t, meta)
+      meta: _.pick(t, meta),
+      relationships
     };
   },
 
   create(req, res) {
     const rawAttrs = _.get(req, 'body.attributes', {});
     const rawMeta = _.get(req, 'body.meta', {});
+    const rawRelations = _.get(req, 'body.relationships', {});
+
     const attrs = _.pick(rawAttrs, Object.keys(this.resource.attributes));
     // At the moment, this allows users to modify the built-in-meta, which is
     // no good.
     const meta = _.pick(rawMeta, Object.keys(this.resource.meta));
+    const relations = _.pick(rawRelations, Object.keys(this.resource.relations));
 
-    const columns = Object.assign(attrs, meta);
+    // This maps the name that the user passes in to the ID that they pass in.
+    // A chain().mapValue().mapKeys() could probably do this in a cleaner
+    // manner.
+    const relData = _.reduce(Object.keys(relations), (result, field) => {
+      result[`${field}_id`] = _.get(relations[field], 'data.id');
+      return result;
+    }, {});
+
+    const columns = Object.assign(attrs, meta, relData);
 
     const query = baseSql.create({
       tableName: this.tableName,
@@ -128,12 +159,23 @@ Object.assign(Controller.prototype, {
     const id = req.params.id;
     const rawAttrs = _.get(req, 'body.attributes', {});
     const rawMeta = _.get(req, 'body.meta', {});
+    const rawRelations = _.get(req, 'body.relationships', {});
+
     const attrs = _.pick(rawAttrs, Object.keys(this.resource.attributes));
     // At the moment, this allows users to modify the built-in-meta, which is
     // no good.
     const meta = _.pick(rawMeta, Object.keys(this.resource.meta));
+    const relations = _.pick(rawRelations, Object.keys(this.resource.relations));
 
-    const columns = Object.assign(attrs, meta);
+    // This maps the name that the user passes in to the ID that they pass in.
+    // A chain().mapValue().mapKeys() could probably do this in a cleaner
+    // manner.
+    const relData = _.reduce(Object.keys(relations), (result, field) => {
+      result[`${field}_id`] = _.get(relations[field], 'data.id');
+      return result;
+    }, {});
+
+    const columns = Object.assign(attrs, meta, relData);
 
     let query;
 
