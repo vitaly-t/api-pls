@@ -32,6 +32,20 @@ function getTriggers(resource) {
   return triggers;
 }
 
+// function generateRelationRow(relation, columnBaseName) {
+//   let nullable = '';
+//   if (!relation.nullable) {
+//     nullable = ' NOT NULL';
+//   }
+//
+//   return `  ${columnBaseName}_id INTEGER references ${relation.resource}(id) ${nullable}`;
+// }
+
+// function getRelations(resource) {
+//   const relStrings = _.map(resource.relations, generateRelationRow);
+//   return relStrings;
+// }
+
 module.exports = function(resource) {
   const triggers = getTriggers(resource);
 

@@ -17,6 +17,7 @@ module.exports = function(resourceModel) {
       plural_form: `${resourceModel.name}s`,
       attributes: {},
       meta: {},
+      relations: {},
       // Set the default built-in-meta
       built_in_meta_attributes: {
         created_at: true,
