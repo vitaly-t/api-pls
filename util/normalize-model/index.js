@@ -4,7 +4,7 @@ const _ = require('lodash');
 const normalizeFields = require('./util/normalize-fields');
 const normalizeBuiltInMeta = require('./util/normalize-built-in-meta');
 
-const resourceProps = ['name', 'plural_form', 'attributes', 'meta'];
+const resourceProps = ['name', 'plural_form', 'attributes', 'meta', 'relations'];
 
 // Resource Models written by hand are allowed to be incomplete; for instance,
 // if you're OK with accepting a default value.
@@ -33,6 +33,8 @@ module.exports = function(resourceModel) {
   const builtInMeta = normalizeBuiltInMeta(resource.built_in_meta_attributes);
   const userDefinedMeta = normalizeFields(resource.meta);
   resource.meta = Object.assign(builtInMeta, userDefinedMeta);
+
+  // TODO: normalize relations!
 
   return _.pick(resource, resourceProps);
 };

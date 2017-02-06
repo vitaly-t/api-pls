@@ -32,19 +32,16 @@ function getTriggers(resource) {
   return triggers;
 }
 
-// function generateRelationRow(relation, columnBaseName) {
-//   let nullable = '';
-//   if (!relation.nullable) {
-//     nullable = ' NOT NULL';
-//   }
-//
-//   return `  ${columnBaseName}_id INTEGER references ${relation.resource}(id) ${nullable}`;
-// }
+// At the moment this only works for many-to-one relations. The others will
+// require more complex updates to my migration building procedure.
+function generateRelationRow(relation, columnBaseName) {
+  let nullable = '';
+  if (!relation.nullable) {
+    nullable = ' NOT NULL';
+  }
 
-// function getRelations(resource) {
-//   const relStrings = _.map(resource.relations, generateRelationRow);
-//   return relStrings;
-// }
+  return `  ${columnBaseName}_id INTEGER references ${relation.resource}(id) ${nullable}`;
+}
 
 module.exports = function(resource) {
   const triggers = getTriggers(resource);
@@ -52,8 +49,9 @@ module.exports = function(resource) {
   const idAttrColumn = [idAttr];
   const attrs = _.map(resource.attributes, generateAttrRow);
   const meta = _.map(resource.meta, generateAttrRow);
+  const relations = _.map(resource.relations, generateRelationRow);
 
-  const allColumns = idAttrColumn.concat(attrs, meta);
+  const allColumns = idAttrColumn.concat(attrs, meta, relations);
 
   return `CREATE TABLE ${resource.name} (
   ${allColumns.join(',\n')}
